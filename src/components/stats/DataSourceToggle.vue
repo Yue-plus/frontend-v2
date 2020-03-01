@@ -2,6 +2,7 @@
   {
     "zh": {
       "dataSourceToggle": {
+        "title": "需要登录",
         "loginNotice": "查看个人掉落数据前，请先登录",
         "all": "全平台",
         "personal": "个人"
@@ -9,6 +10,7 @@
     },
     "en": {
       "dataSourceToggle": {
+        "title": "Login Required",
         "loginNotice": "Please log in before viewing personal drop data.",
         "all": "All",
         "personal": "Personal"
@@ -16,9 +18,18 @@
     },
     "ja": {
       "dataSourceToggle": {
+        "title": "ログインが必要です",
         "loginNotice": "個人のドロップデータを表示するにはログインが必要となります。",
         "all": "全体",
         "personal": "個人"
+      }
+    },
+    "ko": {
+      "dataSourceToggle": {
+        "title": "Login Required",
+        "loginNotice": "Please log in before viewing personal drop data.",
+        "all": "All",
+        "personal": "Personal"
       }
     }
   }
@@ -50,11 +61,12 @@
       max-width="290"
     >
       <v-card>
+        <v-card-title class="headline">
+          {{ $t('dataSourceToggle.title') }}
+        </v-card-title>
         <v-card-text>
           {{ $t('dataSourceToggle.loginNotice') }}
         </v-card-text>
-
-        <v-divider />
 
         <v-card-actions>
           <v-spacer />
@@ -62,35 +74,32 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <div class="v-item-group theme--dark v-btn-toggle v-btn-toggle--only-child v-btn-toggle--selected">
-      <button
-        :class="{'v-btn--active': dataSource === 'global'}"
-        type="button"
+    <v-btn-toggle
+      v-model="dataSource"
+      active-class="font-weight-bold"
+      mandatory
+      borderless
+      class="data-source-switch"
+    >
+      <v-btn
+        small
         value="global"
-        class="v-btn theme--dark"
-        @click="dataSource = 'global'"
       >
-        <div class="v-btn__content">
-          {{ $t('dataSourceToggle.all') }}
-        </div>
-      </button>
-      <button
-        :class="{'v-btn--active': dataSource === 'personal'}"
-        type="button"
+        {{ $t('dataSourceToggle.all') }}
+      </v-btn>
+      <v-btn
+        small
         value="personal"
-        class="v-btn theme--dark"
-        @click="dataSource = 'personal'"
       >
-        <div class="v-btn__content">
-          {{ $t('dataSourceToggle.personal') }}
-        </div>
-      </button>
-    </div>
+        {{ $t('dataSourceToggle.personal') }}
+      </v-btn>
+    </v-btn-toggle>
   </span>
 </template>
 
 <script>
-import AccountManager from "@/components/AccountManager";
+import AccountManager from "@/components/toolbar/AccountManager";
+import {mapGetters} from "vuex";
 export default {
   name: "DataSourceToggle",
   components: {
@@ -99,13 +108,16 @@ export default {
   data() {
     return {
       dialog: false,
-      prefetchingResources: false
+      prefetchingResources: false,
+      dataSourceId: null
     };
   },
   computed: {
+    ...mapGetters('auth', ['loggedIn']),
+    ...mapGetters('dataSource', ['source']),
     dataSource: {
       get() {
-        return this.$store.state.dataSource;
+        return this.source;
       },
       async set(value) {
         switch (value) {
@@ -113,17 +125,17 @@ export default {
             break;
           case "personal":
             // refresh personal data
-            if (!this.$store.getters.authed) {
+            if (!this.loggedIn) {
               // please login
               this.dialog = true;
               return;
             }
             // fetch data
-            this.$store.dispatch("refreshPersonalMatrixData");
+            this.$store.dispatch("data/refreshPersonalMatrix");
             // change data source after fetch data
             break;
         }
-        this.$store.commit("switchDataSource", value);
+        this.$store.commit("dataSource/switch", value);
       }
     }
   },
@@ -137,4 +149,10 @@ export default {
 </script>
 
 <style scoped>
+  .theme--light.data-source-switch {
+    border: 1px solid rgba(0, 0, 0, .8);
+  }
+  .theme--dark.data-source-switch {
+    border: 1px solid rgba(255, 255, 255, .6);
+  }
 </style>

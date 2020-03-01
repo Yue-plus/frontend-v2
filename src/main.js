@@ -1,23 +1,25 @@
 import Vue from 'vue'
-import './plugins/vuetify'
+import vuetify from './plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css'
 import App from './App.vue'
 import router from './router'
 import store from './store'
 import i18n from './i18n'
 import VueAnalytics from "vue-analytics"
-import AOS from 'aos'
 import 'aos/dist/aos.css'
 import I18n from "@/i18n"
+import config from "@/config"
 
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
 
 const production = process.env.NODE_ENV === 'production';
 
+Vue.config.performance = true;
+
 if (production) {
   Sentry.init({
-    dsn: 'https://9636aaa824a744f98a619df0aaabba00@sentry.io/1536764',
+    dsn: 'https://aebfbfbe08de42f7a9f291f5ae9ebf97@sentry.imgal.vin/2',
     integrations: [new Integrations.Vue({Vue, attachProps: true})],
 
     // NOTE: the config below (`logErrors`) controls whether the error will be logged
@@ -26,14 +28,9 @@ if (production) {
     // So I've turned this setting off. If necessary please re-enable it.
     // More info at: https://docs.sentry.io/platforms/javascript/vue/
     logErrors: false,
+    release: 'frontend-v2@' + (config.version || 'unknown'),
   });
 }
-
-router.beforeEach(async(to, from, next) => {
-  await store.dispatch("fetchData", false);
-  document.title = `${I18n.t(to.meta.i18n)} | ${I18n.t('app.name')}`;
-  next();
-});
 
 Vue.use(VueAnalytics, {
   id: 'UA-142226262-1',
@@ -55,18 +52,17 @@ Vue.use(VueAnalytics, {
   }
 });
 
+router.beforeEach((to, from, next) => {
+  document.title = `${I18n.t(to.meta.i18n)} | ${I18n.t('app.name')}`;
+  next();
+});
+
 Vue.config.productionTip = false;
 
 new Vue({
+  vuetify,
   router,
   store,
   i18n,
-  created() {
-    AOS.init({
-      delay: 100,
-      duration: 700,
-      easing: 'ease-in-out-sine'
-    })
-  },
   render: h => h(App),
 }).$mount('#app');
